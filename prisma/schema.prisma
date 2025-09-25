@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BillStatus {
+  unpaid
+  paid
+}
+
+enum BillCategory {
+  spaylater
+  electricity
+  water
+  internet
+  grocery
+  other
+}
+
+enum BillAssignee {
+  lia
+  mary
+  none
+}
+
+model Bill {
+  id        String       @id @default(uuid())
+  name      String
+  provider  String?
+  source    String?      // "spaylater" | "manual" | "other" (free-form)
+  amount    Decimal      @db.Decimal(12, 2) // use Decimal to avoid float issues
+  currency  String       @default("PHP")
+  dueDate   DateTime         // store as date
+  status    BillStatus   @default(unpaid)
+  paidAt    DateTime?
+  notes     String?
+  category  BillCategory
+  assignee  BillAssignee @default(none)
+
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([dueDate])
+  @@index([status])
+  @@index([category, assignee])
+}
