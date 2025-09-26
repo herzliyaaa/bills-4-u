@@ -92,7 +92,7 @@ function Pill({
   tone = "slate",
 }: {
   children: React.ReactNode;
-  tone?: "slate" | "green" | "red" | "amber" | "indigo";
+  tone?: "slate" | "green" | "red" | "amber" | "indigo" | "orange";
 }) {
   const styles: Record<string, string> = {
     slate: "bg-slate-100 text-slate-700",
@@ -100,6 +100,7 @@ function Pill({
     red: "bg-red-100 text-red-700",
     amber: "bg-amber-100 text-amber-800",
     indigo: "bg-indigo-100 text-indigo-700",
+    orange: "bg-orange-100 text-orange-700",
   };
   return (
     <span
@@ -120,8 +121,13 @@ function BillRow({ bill }: { bill: Bill }) {
           <div className="text-base font-semibold text-gray-900">
             {bill.name}
           </div>
-          {bill.source === "spaylater" && <Pill tone="indigo">SPayLater</Pill>}
-          {bill.category && <Pill tone="slate">{bill.category}</Pill>}
+          {bill.category === "spaylater" && (
+            <Pill tone="orange">SPayLater</Pill>
+          )}
+          {bill.category === "electricity" && (
+            <Pill tone="indigo">SPayLater</Pill>
+          )}
+          {bill.category === "water" && <Pill tone="amber">SPayLater</Pill>}
         </div>
         {bill.provider && (
           <div className="text-sm text-gray-500">{bill.provider}</div>
@@ -212,6 +218,44 @@ function Section({
   );
 }
 
+function AssigneeFilter({
+  value,
+  onChange,
+}: {
+  value: "all" | "lia" | "mary" | "none";
+  onChange: (v: "all" | "lia" | "mary" | "none") => void;
+}) {
+  const OPTIONS = [
+    { key: "all", label: "All" },
+    { key: "lia", label: "Lia" },
+    { key: "mary", label: "Mary" },
+    { key: "none", label: "Unassigned" },
+  ] as const;
+
+  return (
+    <div className="inline-flex rounded-lg border bg-white p-1 shadow-sm">
+      {OPTIONS.map((opt) => {
+        const isActive = value === opt.key;
+        return (
+          <button
+            key={opt.key}
+            onClick={() => onChange(opt.key)}
+            className={[
+              "px-3 py-1.5 text-sm font-medium rounded-md transition",
+              isActive
+                ? "bg-slate-900 text-white shadow"
+                : "text-gray-700 hover:bg-gray-100",
+            ].join(" ")}
+            aria-pressed={isActive}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /** =========================
  * Page
  * ======================= */
@@ -219,16 +263,41 @@ function Section({
 export default function BillsPage() {
   const router = useRouter();
   const [tab, setTab] = useState<"unpaid" | "paid">("unpaid");
+  const [assignee, setAssignee] = useState<"all" | "lia" | "mary" | "none">(
+    "all"
+  );
+  const {
+    bills,
+    unpaidThisMonth,
+    unpaidUpcoming,
+    overdue,
+    paid,
+    isLoading,
+    isError,
+  } = useBills();
 
-  const { bills,  unpaidThisMonth, unpaidUpcoming, overdue, paid, isLoading, isError } = useBills();
+  const filterByAssignee = (list: Bill[]) =>
+    assignee === "all" ? list : list.filter((b) => b.assignee === assignee);
 
+  const unpaidThisMonthF = useMemo(
+    () => filterByAssignee(unpaidThisMonth),
+    [unpaidThisMonth, assignee]
+  );
+  const unpaidUpcomingF = useMemo(
+    () => filterByAssignee(unpaidUpcoming),
+    [unpaidUpcoming, assignee]
+  );
+  const overdueF = useMemo(
+    () => filterByAssignee(overdue),
+    [overdue, assignee]
+  );
+  const paidF = useMemo(() => filterByAssignee(paid), [paid, assignee]);
 
-
-  const totalUnpaidThisMonth = unpaidThisMonth.reduce(
+  const totalUnpaidThisMonth = unpaidThisMonthF.reduce(
     (sum, b) => sum + b.amount,
     0
   );
-  const totalUnpaidUpcoming = unpaidUpcoming.reduce(
+  const totalUnpaidUpcoming = unpaidUpcomingF.reduce(
     (sum, b) => sum + b.amount,
     0
   );
@@ -262,18 +331,19 @@ export default function BillsPage() {
           </h1>
           <p className="mt-1 text-sm text-gray-600">
             Track your <span className="font-medium">Unpaid</span> and{" "}
-            <span className="font-medium">Paid</span> bills. SPayLater items are
-            tagged for easy visibility.
+            <span className="font-medium">Paid</span> bills. Better than
+            spreadsheets, I guess.
           </p>
         </div>
         <div className="flex gap-2 justify-center items-center">
+          <AssigneeFilter value={assignee} onChange={setAssignee} />
+          <TabSwitcher active={tab} onChange={setTab} />
           <Button
-            className="bg-indigo-600 hover:bg-indigo-500 cursor-pointer"
+            className="bg-indigo-600 hover:bg-indigo-500"
             onClick={handleClick}
           >
             <Plus />
           </Button>
-          <TabSwitcher active={tab} onChange={setTab} />
         </div>
       </header>
 
@@ -323,20 +393,20 @@ export default function BillsPage() {
             <Section
               title="This Month"
               subtitle="Bills due in the current month."
-              emptyText="No bills due this month. 🎉"
-              bills={unpaidThisMonth}
+              emptyText="No bills due this month."
+              bills={unpaidThisMonthF}
             />
             <Section
               title="Upcoming"
               subtitle="Bills due after this month."
               emptyText="No upcoming bills yet."
-              bills={unpaidUpcoming}
+              bills={unpaidUpcomingF}
             />
             {overdue.length > 0 && (
               <Section
                 title="Overdue"
                 subtitle="Past-due bills that need attention."
-                bills={overdue}
+                bills={overdueF}
               />
             )}
           </>
@@ -345,7 +415,7 @@ export default function BillsPage() {
             title="Paid"
             subtitle="Recently paid bills."
             emptyText="No paid bills yet."
-            bills={paid}
+            bills={paidF}
           />
         )}
       </div>

@@ -21,6 +21,13 @@ enum BillCategory {
   other
 }
 
+enum Installment {
+  bnpl
+  three_months
+  six_months
+  twelve_months
+}
+
 enum BillAssignee {
   lia
   mary
@@ -28,21 +35,22 @@ enum BillAssignee {
 }
 
 model Bill {
-  id        String       @id @default(uuid())
-  name      String
-  provider  String?
-  source    String?      // "spaylater" | "manual" | "other" (free-form)
-  amount    Decimal      @db.Decimal(12, 2) // use Decimal to avoid float issues
-  currency  String       @default("PHP")
-  dueDate   DateTime         // store as date
-  status    BillStatus   @default(unpaid)
-  paidAt    DateTime?
-  notes     String?
-  category  BillCategory
-  assignee  BillAssignee @default(none)
+  id          String       @id @default(uuid())
+  name        String
+  provider    String?
+  source      String? // "spaylater" | "manual" | "other" (free-form)
+  amount      Decimal      @db.Decimal(12, 2) // use Decimal to avoid float issues
+  currency    String       @default("PHP")
+  dueDate     DateTime // store as date
+  status      BillStatus   @default(unpaid)
+  paidAt      DateTime?
+  notes       String?
+  category    BillCategory
+  installment Installment?
+  assignee    BillAssignee @default(none)
 
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([dueDate])
   @@index([status])

@@ -38,7 +38,6 @@ export default function HomePage() {
 
         <div className="flex gap-2">
           <Link href="/" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-indigo-700">Go to Bills</Link>
-          <Link href="/?tab=paid" className="rounded-md border px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">See Paid</Link>
         </div>
       </header>
 
