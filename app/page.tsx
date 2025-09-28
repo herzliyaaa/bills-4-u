@@ -2,11 +2,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Pen, PenLine, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useBills } from "@/lib/useBills";
 import type { BillDTO as Bill } from "@/lib/bills";
+import { BillEditModal } from "@/components/EditBillForm";
 
 /** =========================
  * Utilities
@@ -72,7 +73,7 @@ function TabSwitcher({
             key={tab}
             onClick={() => onChange(tab)}
             className={[
-              "px-4 py-2 text-sm font-medium rounded-md transition",
+              "cursor-pointer px-4 py-2 text-sm font-medium rounded-md transition",
               isActive
                 ? "bg-indigo-600 text-white shadow"
                 : "text-gray-700 hover:bg-gray-100",
@@ -111,12 +112,14 @@ function Pill({
   );
 }
 
-function BillRow({ bill }: { bill: Bill }) {
+function BillRow({ bill, onEdit }: { bill: Bill; onEdit: (b: Bill) => void }) {
   const due = toLocalDate(bill.dueDate);
   const overdue = bill.status === "unpaid" && due < startOfToday();
+
   return (
-    <div className="grid grid-cols-1 gap-2 rounded-lg border bg-white p-4 shadow-sm sm:grid-cols-12 sm:items-center">
-      <div className="sm:col-span-5">
+    <div className="grid grid-cols-1 gap-4 rounded-lg border bg-white p-4 shadow-sm sm:grid-cols-12 sm:items-center">
+      {/* Name + Category */}
+      <div className="sm:col-span-4">
         <div className="flex items-center gap-2">
           <div className="text-base font-semibold text-gray-900">
             {bill.name}
@@ -125,9 +128,10 @@ function BillRow({ bill }: { bill: Bill }) {
             <Pill tone="orange">SPayLater</Pill>
           )}
           {bill.category === "electricity" && (
-            <Pill tone="indigo">SPayLater</Pill>
+            <Pill tone="indigo">Electricity</Pill>
           )}
-          {bill.category === "water" && <Pill tone="amber">SPayLater</Pill>}
+          {bill.category === "water" && <Pill tone="amber">Water</Pill>}
+          {bill.category === "internet" && <Pill tone="red">Internet</Pill>}
         </div>
         {bill.provider && (
           <div className="text-sm text-gray-500">{bill.provider}</div>
@@ -137,6 +141,7 @@ function BillRow({ bill }: { bill: Bill }) {
         )}
       </div>
 
+      {/* Due Date */}
       <div className="sm:col-span-3">
         <div className="text-sm text-gray-500">Due</div>
         <div
@@ -153,6 +158,7 @@ function BillRow({ bill }: { bill: Bill }) {
         )}
       </div>
 
+      {/* Amount */}
       <div className="sm:col-span-2">
         <div className="text-sm text-gray-500">Amount</div>
         <div className="font-semibold">
@@ -160,6 +166,7 @@ function BillRow({ bill }: { bill: Bill }) {
         </div>
       </div>
 
+      {/* Status */}
       <div className="sm:col-span-2">
         {bill.status === "paid" ? (
           <>
@@ -180,6 +187,17 @@ function BillRow({ bill }: { bill: Bill }) {
           </>
         )}
       </div>
+
+      {/* Edit button */}
+      <div className="sm:col-span-1 flex justify-end">
+        <Button
+          variant="outline"
+          onClick={() => onEdit(bill)}
+          className="cursor-pointer"
+        >
+          <PenLine />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -189,11 +207,13 @@ function Section({
   subtitle,
   emptyText,
   bills,
+  onEdit,
 }: {
   title: string;
   subtitle?: string;
   emptyText?: string;
   bills: Bill[];
+  onEdit: (b: Bill) => void;
 }) {
   return (
     <section className="space-y-3">
@@ -210,14 +230,13 @@ function Section({
       ) : (
         <div className="space-y-3">
           {bills.map((b) => (
-            <BillRow key={b.id} bill={b} />
+            <BillRow key={b.id} bill={b} onEdit={onEdit} />
           ))}
         </div>
       )}
     </section>
   );
 }
-
 function AssigneeFilter({
   value,
   onChange,
@@ -241,7 +260,7 @@ function AssigneeFilter({
             key={opt.key}
             onClick={() => onChange(opt.key)}
             className={[
-              "px-3 py-1.5 text-sm font-medium rounded-md transition",
+              "cursor-pointer px-3 py-1.5 text-sm font-medium rounded-md transition",
               isActive
                 ? "bg-slate-900 text-white shadow"
                 : "text-gray-700 hover:bg-gray-100",
@@ -266,6 +285,7 @@ export default function BillsPage() {
   const [assignee, setAssignee] = useState<"all" | "lia" | "mary" | "none">(
     "all"
   );
+  const [editing, setEditing] = useState<Bill | null>(null);
   const {
     bills,
     unpaidThisMonth,
@@ -339,7 +359,7 @@ export default function BillsPage() {
           <AssigneeFilter value={assignee} onChange={setAssignee} />
           <TabSwitcher active={tab} onChange={setTab} />
           <Button
-            className="bg-indigo-600 hover:bg-indigo-500"
+            className="bg-indigo-600 hover:bg-indigo-500 cursor-pointer"
             onClick={handleClick}
           >
             <Plus />
@@ -395,18 +415,21 @@ export default function BillsPage() {
               subtitle="Bills due in the current month."
               emptyText="No bills due this month."
               bills={unpaidThisMonthF}
+              onEdit={setEditing}
             />
             <Section
               title="Upcoming"
               subtitle="Bills due after this month."
               emptyText="No upcoming bills yet."
               bills={unpaidUpcomingF}
+              onEdit={setEditing}
             />
             {overdue.length > 0 && (
               <Section
                 title="Overdue"
                 subtitle="Past-due bills that need attention."
                 bills={overdueF}
+                onEdit={setEditing}
               />
             )}
           </>
@@ -416,9 +439,18 @@ export default function BillsPage() {
             subtitle="Recently paid bills."
             emptyText="No paid bills yet."
             bills={paidF}
+            onEdit={setEditing}
           />
         )}
       </div>
+
+      {editing && (
+        <BillEditModal
+          bill={editing}
+          open={true}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </main>
   );
 }

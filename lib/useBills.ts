@@ -20,6 +20,7 @@ const normalize = (b: RawBill): BillDTO => ({
   notes: b.notes ?? null,
   category: b.category,
   assignee: b.assignee,
+  installment: b.installment ?? null,   
   createdAt: b.createdAt ?? new Date().toISOString(),
   updatedAt: b.updatedAt ?? new Date().toISOString(),
 });

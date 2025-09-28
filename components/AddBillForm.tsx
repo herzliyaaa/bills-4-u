@@ -203,14 +203,14 @@ export default function AddBillForm() {
         <button
           type="reset"
           onClick={handleClear}
-          className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50"
+          className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50 cursor-pointer"
           disabled={submitting}
         >
           Clear
         </button>
         <button
           type="submit"
-          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white cursor-pointer hover:bg-indigo-700 disabled:opacity-60"
           disabled={submitting}
         >
           {submitting ? "Adding…" : "Add Bill"}

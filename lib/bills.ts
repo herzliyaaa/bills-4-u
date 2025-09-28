@@ -51,7 +51,7 @@ export interface BillDTO {
   notes?: string | null;
   category: BillCategory;
   assignee: BillAssignee;
-  installment?: Installment;
+  installment?: Installment | null;
   createdAt: string; // ISO datetime
   updatedAt: string; // ISO datetime
 }

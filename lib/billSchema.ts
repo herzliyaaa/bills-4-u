@@ -85,23 +85,25 @@ export const billUpdateSchema = z
     dueDate: ymdString.optional(),
     category: CategoryEnum.optional(),
     assignee: AssigneeEnum.optional(),
-    provider: z.string().optional(),
-    notes: z.string().optional(),
+    provider: z.string().nullable().optional(),
+    notes: z.string().nullable().optional(),
     status: StatusEnum.optional(),
-    paidAt: ymdString.optional(),
-    installment: InstallmentEnum.optional(),
+    paidAt: ymdString.nullable().optional(),
+    installment: InstallmentEnum.nullable().optional(),
   })
   .superRefine((data, ctx) => {
-    // When category explicitly set to spaylater, require installment in this payload
-    if (data.category === "spaylater" && !data.installment) {
+    if (data.category === "spaylater" && data.installment == null) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["installment"],
         message: 'installment is required when category is "spaylater".',
       });
     }
-    // If both provided and category isn’t spaylater, block installment
-    if (data.category && data.category !== "spaylater" && data.installment) {
+    if (
+      data.category &&
+      data.category !== "spaylater" &&
+      data.installment != null
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["installment"],

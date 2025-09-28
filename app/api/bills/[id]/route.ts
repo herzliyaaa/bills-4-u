@@ -34,7 +34,8 @@ export async function PUT(
   }
 
   const patch: any = { ...parsed.data };
-
+  if ("provider" in patch && patch.provider === "") patch.provider = null;
+  if ("notes" in patch && patch.notes === "") patch.notes = null;
   if (patch.dueDate) patch.dueDate = new Date(`${patch.dueDate}T00:00:00`);
   if (patch.paidAt) patch.paidAt = new Date(`${patch.paidAt}T00:00:00`);
 
