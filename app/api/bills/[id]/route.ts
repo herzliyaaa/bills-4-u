@@ -14,7 +14,8 @@ const serialize = (b: any) => ({
   paidAt: toYMD(b.paidAt),
 });
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(_: Request, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const bill = await prisma.bill.findUnique({ where: { id: params.id } });
   if (!bill) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(serialize(bill));
@@ -22,8 +23,9 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params;
   const json = await req.json();
   const parsed = billUpdateSchema.safeParse(json);
   if (!parsed.success) {
@@ -100,8 +102,9 @@ export async function PUT(
 
 export async function DELETE(
   _: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params;
   try {
     await prisma.bill.delete({ where: { id: params.id } });
     return NextResponse.json({ ok: true });

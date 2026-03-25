@@ -246,8 +246,6 @@ function AssigneeFilter({
 }) {
   const OPTIONS = [
     { key: "all", label: "All" },
-    { key: "lia", label: "Lia" },
-    { key: "mary", label: "Mary" },
     { key: "none", label: "Unassigned" },
   ] as const;
 
