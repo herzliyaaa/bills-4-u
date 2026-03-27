@@ -1,8 +1,7 @@
-// app/bills/page.tsx (or wherever this lives)
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Pen, PenLine, Plus } from "lucide-react";
+import { PenLine, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useBills } from "@/lib/useBills";
@@ -240,35 +239,35 @@ function Section({
 function AssigneeFilter({
   value,
   onChange,
+  options,
 }: {
-  value: "all" | "lia" | "mary" | "none";
-  onChange: (v: "all" | "lia" | "mary" | "none") => void;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
 }) {
-  const OPTIONS = [
-    { key: "all", label: "All" },
-    { key: "none", label: "Unassigned" },
-  ] as const;
+  const selectOptions = [
+    "all",
+    "none",
+    ...options.filter((a) => a && a !== "none"),
+  ];
 
   return (
     <div className="inline-flex rounded-lg border bg-white p-1 shadow-sm">
-      {OPTIONS.map((opt) => {
-        const isActive = value === opt.key;
-        return (
-          <button
-            key={opt.key}
-            onClick={() => onChange(opt.key)}
-            className={[
-              "cursor-pointer px-3 py-1.5 text-sm font-medium rounded-md transition",
-              isActive
-                ? "bg-slate-900 text-white shadow"
-                : "text-gray-700 hover:bg-gray-100",
-            ].join(" ")}
-            aria-pressed={isActive}
-          >
-            {opt.label}
-          </button>
-        );
-      })}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="rounded-md border bg-white px-3 py-1.5 text-sm"
+      >
+        {selectOptions.map((option) => (
+          <option key={option} value={option}>
+            {option === "all"
+              ? "All"
+              : option === "none"
+                ? "Unassigned"
+                : option}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
@@ -280,12 +279,11 @@ function AssigneeFilter({
 export default function BillsPage() {
   const router = useRouter();
   const [tab, setTab] = useState<"unpaid" | "paid">("unpaid");
-  const [assignee, setAssignee] = useState<"all" | "lia" | "mary" | "none">(
-    "all"
-  );
+  const [assignee, setAssignee] = useState<string>("all");
   const [editing, setEditing] = useState<Bill | null>(null);
   const {
     bills,
+    assignees,
     unpaidThisMonth,
     unpaidUpcoming,
     overdue,
@@ -299,25 +297,25 @@ export default function BillsPage() {
 
   const unpaidThisMonthF = useMemo(
     () => filterByAssignee(unpaidThisMonth),
-    [unpaidThisMonth, assignee]
+    [unpaidThisMonth, assignee],
   );
   const unpaidUpcomingF = useMemo(
     () => filterByAssignee(unpaidUpcoming),
-    [unpaidUpcoming, assignee]
+    [unpaidUpcoming, assignee],
   );
   const overdueF = useMemo(
     () => filterByAssignee(overdue),
-    [overdue, assignee]
+    [overdue, assignee],
   );
   const paidF = useMemo(() => filterByAssignee(paid), [paid, assignee]);
 
   const totalUnpaidThisMonth = unpaidThisMonthF.reduce(
     (sum, b) => sum + b.amount,
-    0
+    0,
   );
   const totalUnpaidUpcoming = unpaidUpcomingF.reduce(
     (sum, b) => sum + b.amount,
-    0
+    0,
   );
 
   const handleClick = () => router.push("/bills"); // adjust if this should open an "add" route
@@ -354,7 +352,11 @@ export default function BillsPage() {
           </p>
         </div>
         <div className="flex gap-2 justify-center items-center">
-          <AssigneeFilter value={assignee} onChange={setAssignee} />
+          <AssigneeFilter
+            value={assignee}
+            onChange={setAssignee}
+            options={assignees}
+          />
           <TabSwitcher active={tab} onChange={setTab} />
           <Button
             className="bg-indigo-600 hover:bg-indigo-500 cursor-pointer"
@@ -447,6 +449,7 @@ export default function BillsPage() {
           bill={editing}
           open={true}
           onClose={() => setEditing(null)}
+          assignees={assignees}
         />
       )}
     </main>

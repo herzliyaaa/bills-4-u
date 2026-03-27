@@ -4,11 +4,11 @@ import { billCreateSchema } from "@/lib/billSchema";
 
 export const runtime = "nodejs";
 
-const serialize = (b: any) => ({
+const serialize = (b: Record<string, unknown>) => ({
   ...b,
   amount: Number(b.amount),
-  dueDate: b.dueDate.toISOString(), // hook slices to YYYY-MM-DD
-  paidAt: b.paidAt ? b.paidAt.toISOString() : null,
+  dueDate: (b.dueDate as Date).toISOString(), // hook slices to YYYY-MM-DD
+  paidAt: b.paidAt ? (b.paidAt as Date).toISOString() : null,
 });
 
 export async function GET() {
@@ -31,6 +31,9 @@ export async function POST(req: Request) {
 
   const data = parsed.data;
 
+  // Normalize dynamic assignee: empty/whitespace => none.
+  const assignee = data.assignee?.toString().trim() || "none";
+
   // Extra guard: disallow installment unless spaylater
   const installment =
     data.category === "spaylater" ? data.installment ?? null : null;
@@ -44,7 +47,7 @@ export async function POST(req: Request) {
       status: "unpaid",
       category: data.category,
       installment,
-      assignee: data.assignee ?? "none",
+      assignee,
       provider: data.provider,
       notes: data.notes,
       source: data.category === "spaylater" ? "spaylater" : "manual",

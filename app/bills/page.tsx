@@ -19,7 +19,7 @@ function SummaryCard({title, value, sub}:{title:string; value:string; sub?:strin
 }
 
 export default function HomePage() {
-  const { unpaidThisMonth, unpaidUpcoming, overdue, paid } = useBills();
+  const { unpaidThisMonth, unpaidUpcoming, overdue, paid, assignees } = useBills();
 
   const totalThisMonth = unpaidThisMonth.reduce((s,b)=>s+b.amount,0);
   const totalUpcoming  = unpaidUpcoming.reduce((s,b)=>s+b.amount,0);
@@ -42,7 +42,7 @@ export default function HomePage() {
       </header>
 
       <section className="mb-8">
-        <AddBillForm />
+        <AddBillForm assignees={assignees} />
       </section>
 
       <section className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-4">

@@ -3,10 +3,8 @@
 import { useState } from "react";
 import {
   CATEGORIES,
-  ASSIGNEES,
   INSTALLMENTS,
   type BillCategory,
-  type BillAssignee,
   type Installment,
 } from "@/lib/bills";
 import { useBills } from "@/lib/useBills";
@@ -15,14 +13,15 @@ function formatMoneyInput(v: string) {
   return v.replace(/[^\d.]/g, "");
 }
 
-export default function AddBillForm() {
+export default function AddBillForm({assignees}: {assignees?: string[]}) {
   const { addBill } = useBills();
+  const safeAssignees = Array.from(new Set([...(assignees ?? []), 'none'])).sort((a,b)=>a.localeCompare(b));
 
   const [name, setName] = useState("");
   const [amount, setAmount] = useState<string>("");
   const [dueDate, setDueDate] = useState<string>("");
   const [category, setCategory] = useState<BillCategory>("spaylater");
-  const [assignee, setAssignee] = useState<BillAssignee>("none");
+  const [assignee, setAssignee] = useState<string>("none");
   const [installment, setInstallment] = useState<Installment>();
   const [provider, setProvider] = useState("");
   const [notes, setNotes] = useState("");
@@ -163,11 +162,11 @@ export default function AddBillForm() {
           <select
             className="w-full rounded-md border px-3 py-2 text-sm"
             value={assignee}
-            onChange={(e) => setAssignee(e.target.value as BillAssignee)}
+            onChange={(e) => setAssignee(e.target.value)}
           >
-            {ASSIGNEES.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
+            {safeAssignees.map((a) => (
+              <option key={a} value={a}>
+                {a === 'none' ? 'Unassigned' : a}
               </option>
             ))}
           </select>

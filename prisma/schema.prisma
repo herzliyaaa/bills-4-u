@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // url is now configured in prisma.config.ts for Prisma 7+
 }
 
 enum BillStatus {
@@ -28,12 +27,6 @@ enum Installment {
   twelve_months
 }
 
-enum BillAssignee {
-  lia
-  mary
-  none
-}
-
 model Bill {
   id          String       @id @default(uuid())
   name        String
@@ -47,7 +40,7 @@ model Bill {
   notes       String?
   category    BillCategory
   installment Installment?
-  assignee    BillAssignee @default(none)
+  assignee    String       @default("none")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -2,27 +2,27 @@
 import useSWR from 'swr';
 import type { BillDTO } from '@/lib/bills';
 
-type RawBill = any;
+type RawBill = Record<string, unknown>;
 
 // Accept both "YYYY-MM-DD" and full ISO strings
 const toDate = (s: string) => (s?.includes('T') ? new Date(s) : new Date(`${s}T00:00:00`));
 
 const normalize = (b: RawBill): BillDTO => ({
   id: String(b.id),
-  name: b.name,
-  provider: b.provider ?? null,
-  source: b.source ?? null,
+  name: String(b.name),
+  provider: b.provider ? String(b.provider) : null,
+  source: b.source ? String(b.source) : null,
   amount: Number(b.amount),                       // Decimal -> number
-  currency: b.currency ?? 'PHP',
+  currency: String(b.currency ?? 'PHP'),
   dueDate: String(b.dueDate ?? '').slice(0, 10),  // -> "YYYY-MM-DD"
-  status: b.status,
+  status: String(b.status) as 'unpaid' | 'paid',
   paidAt: b.paidAt ? String(b.paidAt).slice(0, 10) : null,
-  notes: b.notes ?? null,
-  category: b.category,
-  assignee: b.assignee,
-  installment: b.installment ?? null,   
-  createdAt: b.createdAt ?? new Date().toISOString(),
-  updatedAt: b.updatedAt ?? new Date().toISOString(),
+  notes: b.notes ? String(b.notes) : null,
+  category: String(b.category) as 'spaylater' | 'electricity' | 'water' | 'internet' | 'grocery' | 'other',
+  assignee: String(b.assignee),
+  installment: b.installment ? (String(b.installment) as 'bnpl' | 'three_months' | 'six_months' | 'twelve_months') : null,   
+  createdAt: String(b.createdAt ?? new Date().toISOString()),
+  updatedAt: String(b.updatedAt ?? new Date().toISOString()),
 });
 
 const fetcher = async (url: string): Promise<BillDTO[]> => {
@@ -51,6 +51,13 @@ export function useBills() {
   const unpaidUpcoming = unpaid.filter(b => toDate(b.dueDate) >= startOfNextMonth);
   const paid = bills.filter(b => b.status === 'paid');
 
+  const assignees = Array.from(
+    new Set([
+      ...bills.map((b) => b.assignee).filter(Boolean),
+      'none',
+    ])
+  ).sort((a, b) => a.localeCompare(b));
+
   async function addBill(input: Partial<BillDTO>) {
     const res = await fetch('/api/bills', {
       method: 'POST',
@@ -77,6 +84,7 @@ export function useBills() {
 
   return {
     bills,
+    assignees,
     unpaidThisMonth,
     unpaidUpcoming,
     overdue,

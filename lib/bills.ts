@@ -6,7 +6,7 @@ export type BillCategory =
   | "grocery"
   | "other";
 
-export type BillAssignee = "lia" | "mary" | "none";
+export type BillAssignee = string;
 export type BillStatus = "unpaid" | "paid";
 export type Installment =
   | "bnpl"
@@ -23,12 +23,6 @@ export const CATEGORIES = [
   { value: "grocery", label: "Grocery" },
   { value: "other", label: "Other" },
 ] as const satisfies readonly { value: BillCategory; label: string }[];
-
-export const ASSIGNEES = [
-  { value: "lia", label: "Lia" },
-  { value: "mary", label: "Mary" },
-  { value: "none", label: "Unassigned" },
-] as const satisfies readonly { value: BillAssignee; label: string }[];
 
 export const INSTALLMENTS = [
   { value: "bnpl", label: "BNPL" },

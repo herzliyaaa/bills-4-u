@@ -9,12 +9,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   CATEGORIES,
-  ASSIGNEES,
   INSTALLMENTS,
   type BillDTO as Bill,
   type UpdateBillInput,
 } from "@/lib/bills";
-import { billUpdateSchema } from "@/lib/billSchema";
 import { useBills } from "@/lib/useBills";
 
 /** ---------- utils ---------- */
@@ -25,9 +23,17 @@ const isDifferent = (a: unknown, b: unknown) =>
   JSON.stringify(a) !== JSON.stringify(b);
 
 /** Keep schema in sync with server. UI accepts "" then we convert to null on submit. */
-const formSchema = billUpdateSchema.safeExtend({
+const formSchema = z.object({
+  name: z.string().min(1).optional(),
+  amount: z.number().positive().optional(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use yyyy-mm-dd").optional(),
+  category: z.enum(["spaylater", "electricity", "water", "internet", "grocery", "other"]).optional(),
+  assignee: z.string().trim().min(1).nullable().optional(),
   provider: z.string().optional(),
   notes: z.string().optional(),
+  status: z.enum(["unpaid", "paid"]).optional(),
+  paidAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use yyyy-mm-dd").nullable().optional(),
+  installment: z.enum(["bnpl", "three_months", "six_months", "twelve_months"]).nullable().optional(),
 });
 type FormValues = z.infer<typeof formSchema>;
 
@@ -35,11 +41,14 @@ export function BillEditModal({
   bill,
   open,
   onClose,
+  assignees,
 }: {
   bill: Bill;
   open: boolean;
   onClose: () => void;
+  assignees?: string[];
 }) {
+  const safeAssignees = Array.from(new Set([...(assignees ?? []), 'none'])).sort((a,b)=>a.localeCompare(b));
   const router = useRouter();
   const { updateBill, removeBill } = useBills();
 
@@ -59,8 +68,8 @@ export function BillEditModal({
     };
   }, [open]);
 
-  const form = useForm<FormValues, any>({
-    resolver: zodResolver(formSchema) as any,
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: bill.name,
       amount: bill.amount,
@@ -98,7 +107,7 @@ export function BillEditModal({
       next: UpdateBillInput[K],
       current: unknown
     ) => {
-      if (isDifferent(next, current)) (patch as any)[key] = next;
+      if (isDifferent(next, current)) patch[key] = next;
     };
 
     if (values.name !== undefined) setIfChanged("name", values.name, bill.name);
@@ -108,8 +117,11 @@ export function BillEditModal({
       setIfChanged("dueDate", values.dueDate, toYMD(bill.dueDate));
     if (values.category !== undefined)
       setIfChanged("category", values.category, bill.category);
-    if (values.assignee !== undefined)
-      setIfChanged("assignee", values.assignee, bill.assignee);
+    if (values.assignee !== undefined) {
+      // Normalize: null or empty string => "none"
+      const normalized = values.assignee || "none";
+      setIfChanged("assignee", normalized as string, bill.assignee);
+    }
 
     // "" -> null clears
     if (values.provider !== undefined) {
@@ -288,9 +300,9 @@ export function BillEditModal({
                 className="mt-1 w-full rounded-md border bg-white px-3 py-2 text-sm"
                 {...form.register("assignee")}
               >
-                {ASSIGNEES.map((a) => (
-                  <option key={a.value} value={a.value}>
-                    {a.label}
+                {safeAssignees.map((a) => (
+                  <option key={a} value={a}>
+                    {a === 'none' ? 'Unassigned' : a}
                   </option>
                 ))}
               </select>

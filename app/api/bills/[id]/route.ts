@@ -7,11 +7,11 @@ export const runtime = "nodejs";
 const toYMD = (d: Date | null | undefined) =>
   d ? d.toISOString().slice(0, 10) : null;
 
-const serialize = (b: any) => ({
+const serialize = (b: Record<string, unknown>) => ({
   ...b,
   amount: Number(b.amount),
-  dueDate: toYMD(b.dueDate),
-  paidAt: toYMD(b.paidAt),
+  dueDate: toYMD(b.dueDate as Date | null | undefined),
+  paidAt: toYMD(b.paidAt as Date | null | undefined),
 });
 
 export async function GET(_: Request, context: { params: Promise<{ id: string }> }) {
@@ -35,11 +35,11 @@ export async function PUT(
     );
   }
 
-  const patch: any = { ...parsed.data };
+  const patch: Record<string, unknown> = { ...parsed.data };
   if ("provider" in patch && patch.provider === "") patch.provider = null;
   if ("notes" in patch && patch.notes === "") patch.notes = null;
-  if (patch.dueDate) patch.dueDate = new Date(`${patch.dueDate}T00:00:00`);
-  if (patch.paidAt) patch.paidAt = new Date(`${patch.paidAt}T00:00:00`);
+  if (patch.dueDate) patch.dueDate = new Date(`${String(patch.dueDate)}T00:00:00`);
+  if (patch.paidAt) patch.paidAt = new Date(`${String(patch.paidAt)}T00:00:00`);
 
   if (patch.status === "paid" && !patch.paidAt) {
     const today = new Date();

@@ -9,7 +9,7 @@ const CategoryEnum = z.enum([
   "grocery",
   "other",
 ]);
-const AssigneeEnum = z.enum(["lia", "mary", "none"]);
+
 const StatusEnum = z.enum(["unpaid", "paid"]);
 const InstallmentEnum = z.enum([
   "bnpl",
@@ -50,7 +50,7 @@ export const billCreateSchema = z
     amount: z.coerce.number().positive(),
     dueDate: ymdString,
     category: CategoryEnum,
-    assignee: AssigneeEnum.optional(),
+    assignee: z.string().trim().min(1).optional(),
     provider: z.string().optional(),
     notes: z.string().optional(),
     installment: InstallmentEnum.optional(),
@@ -84,7 +84,7 @@ export const billUpdateSchema = z
     amount: z.coerce.number().positive().optional(),
     dueDate: ymdString.optional(),
     category: CategoryEnum.optional(),
-    assignee: AssigneeEnum.optional(),
+    assignee: z.string().trim().min(1).nullable().optional(),
     provider: z.string().nullable().optional(),
     notes: z.string().nullable().optional(),
     status: StatusEnum.optional(),
