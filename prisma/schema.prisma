@@ -49,3 +49,18 @@ model Bill {
   @@index([status])
   @@index([category, assignee])
 }
+
+model Assignee {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Admin {
+  id       String @id @default(uuid())
+  email    String @unique
+  password String // hashed password
+  name     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
