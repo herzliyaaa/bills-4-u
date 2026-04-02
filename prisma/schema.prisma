@@ -56,6 +56,7 @@ model Assignee {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
 model Admin {
   id       String @id @default(uuid())
   email    String @unique
@@ -63,4 +64,64 @@ model Admin {
   name     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// New models for budget tracking
+enum TransactionType {
+  inflow
+  outflow
+}
+
+enum CategoryType {
+  income
+  expense
+}
+
+model Category {
+  id        String        @id @default(uuid())
+  name      String        @unique
+  type      CategoryType
+  color     String?       // For UI visualization
+  icon      String?       // Optional icon name
+
+  transactions Transaction[]
+  budgets      Budget[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  type        TransactionType
+  amount      Decimal         @db.Decimal(12, 2)
+  currency    String          @default("PHP")
+  categoryId  String
+  category    Category        @relation(fields: [categoryId], references: [id])
+  date        DateTime
+  description String?
+  billId      String?         // Optional link to existing bills
+  assignee    String?         // Optional assignee for shared expenses
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@index([type, categoryId])
+  @@index([assignee])
+}
+
+model Budget {
+  id         String   @id @default(uuid())
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  amount     Decimal  @db.Decimal(12, 2)
+  currency   String   @default("PHP")
+  period     String   @default("monthly") // "monthly" | "yearly"
+  startDate  DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId, period])
 }
