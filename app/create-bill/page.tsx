@@ -37,7 +37,7 @@ export default function HomePage() {
         </div>
 
         <div className="flex gap-2">
-          <Link href="/" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-indigo-700">Go to Bills</Link>
+          <Link href="/dashboard" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-indigo-700">Go to Bills</Link>
         </div>
       </header>
 

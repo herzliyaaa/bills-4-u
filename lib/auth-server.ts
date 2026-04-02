@@ -6,11 +6,11 @@ export async function requireAdminServer() {
   const cookiesList = await cookies();
   const token = cookiesList.get("auth_token")?.value;
 
-  if (!token) redirect("/admin/login");
+  if (!token) redirect("/");
 
   try {
     return verifyToken(token);
   } catch {
-    redirect("/admin/login");
+    redirect("/");
   }
 }

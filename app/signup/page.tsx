@@ -24,7 +24,7 @@ export default function AdminSignup() {
     if (!res.ok) return setError(data.error || "Signup failed");
 
     // Redirect to admin dashboard after signup
-    router.push("/admin/dashboard");
+    router.push("/dashboard");
   }
 
   return (

@@ -20,7 +20,7 @@ export default function AdminLogin() {
     const data = await res.json();
 
     if (!res.ok) return setError(data.error || "Login failed");
-    router.replace("/admin/dashboard");
+    router.replace("/dashboard");
     router.refresh();
   }
 
