@@ -1,20 +1,8 @@
-import { cookies } from "next/headers";
-import { verifyToken } from "@/lib/jwt";
+import { requireAdminServer } from "@/lib/auth-server";
 
 export default async function AdminDashboard() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
+  const admin = await requireAdminServer();
 
-  if (!token) {
-    // redirect to login
-    throw new Error("Unauthorized");
-  }
+  return <div>Welcome {typeof admin === 'string' ? admin : admin.email}</div>;
 
-  try {
-    verifyToken(token);
-  } catch {
-    throw new Error("Invalid token");
-  }
-
-  return <div>Welcome to Admin Dashboard!</div>;
 }

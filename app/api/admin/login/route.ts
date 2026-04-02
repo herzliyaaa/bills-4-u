@@ -6,12 +6,14 @@ import { serialize } from "cookie";
 
 export async function POST(request: Request) {
   const { email, password } = await request.json();
-  
+
   const admin = await prisma.admin.findUnique({ where: { email } });
-  if (!admin) return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+  if (!admin)
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
 
   const isValid = await verifyPassword(password, admin.password);
-  if (!isValid) return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+  if (!isValid)
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
 
   const token = signToken({ id: admin.id, email: admin.email });
 
@@ -20,10 +22,14 @@ export async function POST(request: Request) {
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 4 * 60 * 60,
+    sameSite: "lax",
   });
 
-  return NextResponse.json({ message: "Logged in" }, {
-    status: 200,
-    headers: { "Set-Cookie": cookie },
-  });
+  return NextResponse.json(
+    { message: "Logged in" },
+    {
+      status: 200,
+      headers: { "Set-Cookie": cookie },
+    },
+  );
 }

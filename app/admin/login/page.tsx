@@ -15,10 +15,13 @@ export default function AdminLogin() {
       method: "POST",
       body: JSON.stringify({ email, password }),
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
     });
     const data = await res.json();
+
     if (!res.ok) return setError(data.error || "Login failed");
-    router.push("/admin/dashboard");
+    router.replace("/admin/dashboard");
+    router.refresh();
   }
 
   return (
