@@ -80,19 +80,24 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
+    //TODO:  change the isSavings logic from using includes to category.isSavings === true (you’d add a boolean field in DB)
+    const isSavings = category.name.toLowerCase().includes("savings");
 
-    if (category.type === "income" && type !== "inflow") {
-      return NextResponse.json(
-        { error: "Income categories can only be used for inflows" },
-        { status: 400 },
-      );
-    }
+    // Only enforce strict rules if NOT savings
+    if (!isSavings) {
+      if (category.type === "income" && type !== "inflow") {
+        return NextResponse.json(
+          { error: "Income categories can only be used for inflows" },
+          { status: 400 },
+        );
+      }
 
-    if (category.type === "expense" && type !== "outflow") {
-      return NextResponse.json(
-        { error: "Expense categories can only be used for outflows" },
-        { status: 400 },
-      );
+      if (category.type === "expense" && type !== "outflow") {
+        return NextResponse.json(
+          { error: "Expense categories can only be used for outflows" },
+          { status: 400 },
+        );
+      }
     }
 
     const transaction = await prisma.transaction.create({

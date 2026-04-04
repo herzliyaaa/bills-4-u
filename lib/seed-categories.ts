@@ -90,6 +90,12 @@ export async function seedCategories() {
       color: "#6B7280",
       icon: "MoreHorizontal",
     },
+    {
+      name: "Savings",
+      type: "expense" as const,
+      color: "#059669",
+      icon: "PiggyBank",
+    },
   ];
 
   for (const category of categories) {
