@@ -50,12 +50,14 @@ function Section({
 function SavingsSection({
   savingsTarget,
   setSavingsTarget,
+  updateSavingsTarget,
   savingsSaved,
   savingsProgress,
   savingsTransactions,
 }: {
   savingsTarget: number;
   setSavingsTarget: (value: number) => void;
+  updateSavingsTarget: (value: number) => void;
   savingsSaved: number;
   savingsProgress: number;
   savingsTransactions: Transaction[];
@@ -84,25 +86,39 @@ function SavingsSection({
             style={{ width: `${Math.min(savingsProgress, 100)}%` }}
           />
         </div>
-        {/* //TODO: add button to set/update target amount */}
-        {/* //TODO: change this to update the target budget amount instead of just setting a local state (need to decide if we want to allow multiple savings budgets or just one) */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700">
             Savings Target
           </label>
-          <input
-            type="number"
-            value={savingsTarget}
-            onChange={(e) => setSavingsTarget(Number(e.target.value))}
-            className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="1000"
-            min="0"
-          />
+          <div className="flex gap-2">
+            <input
+              type="number"
+              value={savingsTarget}
+              onChange={(e) => setSavingsTarget(Number(e.target.value))}
+              className="flex-1 mt-1 block w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="1000"
+              min="0"
+            />
+            <button
+              type="button"
+              onClick={() => updateSavingsTarget(savingsTarget)}
+              className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Update
+            </button>
+          </div>
         </div>
-        {/* //TODO: add messaging when target is reached or if progress is very low (e.g. less than 25%) to encourage action */}
-        <div className="flex justify-between text-xs text-gray-600">
+
+        {/* Progress messaging */}
+        <div className="flex justify-between text-xs text-gray-600 mt-1">
           <span>{Math.min(savingsProgress, 100).toFixed(1)}% complete</span>
-          <span>{savingsProgress >= 100 ? "Goal reached" : "Keep saving"}</span>
+          <span>
+            {savingsProgress >= 100
+              ? "🎉 Goal reached!"
+              : savingsProgress < 25
+                ? "🚀 Keep pushing, almost there!"
+                : "Keep saving"}
+          </span>
         </div>
       </div>
 
@@ -421,7 +437,42 @@ export default function SavingsClient() {
     .filter((t) => t.type === "outflow")
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  // const totalSaved = initial + inflow - outflow;
+  async function updateSavingsTarget(newTarget: number) {
+    try {
+      if (!savingsCategory) throw new Error("Savings category not found");
+
+      if (savingsBudgets.length === 0) {
+        // Create new savings budget
+        const res = await fetch("/api/budgets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            categoryId: savingsCategory.id,
+            amount: newTarget,
+            period: "monthly", 
+          }),
+        });
+        if (!res.ok) throw new Error("Failed to create savings budget");
+      } else {
+        // Update first existing savings budget (once PATCH exists)
+        const budgetId = savingsBudgets[0].id;
+        const res = await fetch(`/api/budgets/${budgetId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: newTarget }),
+        });
+        if (!res.ok) throw new Error("Failed to update savings budget");
+      }
+
+      await refreshData();
+      alert("Savings target updated!");
+    } catch (err) {
+      console.error(err);
+      alert(
+        err instanceof Error ? err.message : "Error updating savings target",
+      );
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -582,6 +633,7 @@ export default function SavingsClient() {
         <SavingsSection
           savingsTarget={targetAmount}
           setSavingsTarget={setTargetAmount}
+          updateSavingsTarget={updateSavingsTarget}
           savingsSaved={totalSaved}
           savingsProgress={savingsProgress}
           savingsTransactions={savingsTransactions}
