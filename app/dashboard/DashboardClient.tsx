@@ -13,9 +13,19 @@ import { BillEditModal } from "@/components/EditBillForm";
  * ======================= */
 
 // Work with local dates (Manila is UTC+8). Parse yyyy-mm-dd as local midnight.
-const toLocalDate = (isoDate: string) => new Date(`${isoDate}T00:00:00`);
+const toLocalDate = (isoDate?: string | null | Date) => {
+  if (!isoDate) {
+    return new Date(NaN);
+  }
+  if (isoDate instanceof Date) {
+    return new Date(isoDate.getTime());
+  }
 
-function formatMoney(amount: number, currency = "PHP") {
+  const d = new Date(`${isoDate}T00:00:00`);
+  return d;
+};
+
+export function formatMoney(amount: number, currency = "PHP") {
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
     currency,
@@ -23,8 +33,12 @@ function formatMoney(amount: number, currency = "PHP") {
   }).format(amount);
 }
 
-function formatDate(iso: string) {
+export function formatDate(iso?: string | null) {
   const d = toLocalDate(iso);
+  if (Number.isNaN(d.getTime())) {
+    return "Invalid date";
+  }
+
   return new Intl.DateTimeFormat("en-PH", {
     month: "short",
     day: "numeric",
@@ -34,7 +48,12 @@ function formatDate(iso: string) {
 }
 
 function byDueDateAsc(a: Bill, b: Bill) {
-  return toLocalDate(a.dueDate).getTime() - toLocalDate(b.dueDate).getTime();
+  const ta = toLocalDate(a.dueDate).getTime();
+  const tb = toLocalDate(b.dueDate).getTime();
+  if (Number.isNaN(ta) && Number.isNaN(tb)) return 0;
+  if (Number.isNaN(ta)) return 1;
+  if (Number.isNaN(tb)) return -1;
+  return ta - tb;
 }
 
 function byPaidAtDesc(a: Bill, b: Bill) {
@@ -276,6 +295,31 @@ function AssigneeFilter({
  * Page
  * ======================= */
 
+function Navigation() {
+  const router = useRouter();
+
+  return (
+    <nav className="bg-white border-b mb-6">
+      <div className="max-w-6xl mx-auto px-6 py-4">
+        <div className="flex space-x-6">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="text-blue-600 font-medium border-b-2 border-blue-600 pb-1"
+          >
+            Bills Dashboard
+          </button>
+          <button
+            onClick={() => router.push("/budget")}
+            className="text-gray-600 hover:text-gray-900 font-medium"
+          >
+            Budget Tracker
+          </button>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
 export default function BillsPage() {
   const router = useRouter();
   const [tab, setTab] = useState<"unpaid" | "paid">("unpaid");
@@ -339,119 +383,123 @@ export default function BillsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <header className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-            Bills
-          </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Track your <span className="font-medium">Unpaid</span> and{" "}
-            <span className="font-medium">Paid</span> bills. Better than
-            spreadsheets, I guess.
-          </p>
-        </div>
-        <div className="flex gap-2 justify-center items-center">
-          <AssigneeFilter
-            value={assignee}
-            onChange={setAssignee}
-            options={assignees}
-          />
-          <TabSwitcher active={tab} onChange={setTab} />
-          <Button
-            className="bg-indigo-600 hover:bg-indigo-500 cursor-pointer"
-            onClick={handleClick}
-          >
-            <Plus />
-          </Button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
 
-      {/* Summary cards */}
-      {tab === "unpaid" && (
-        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border bg-white p-4 shadow-sm">
-            <div className="text-xs uppercase tracking-wide text-gray-500">
-              This Month
-            </div>
-            <div className="mt-1 text-2xl font-bold">
-              {formatMoney(totalUnpaidThisMonth)}
-            </div>
-            <div className="text-xs text-gray-500">
-              {unpaidThisMonth.length} bill(s)
-            </div>
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <header className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+              Bills
+            </h1>
+            <p className="mt-1 text-sm text-gray-600">
+              Track your <span className="font-medium">Unpaid</span> and{" "}
+              <span className="font-medium">Paid</span> bills. Better than
+              spreadsheets, I guess.
+            </p>
           </div>
-          <div className="rounded-xl border bg-white p-4 shadow-sm">
-            <div className="text-xs uppercase tracking-wide text-gray-500">
-              Upcoming
-            </div>
-            <div className="mt-1 text-2xl font-bold">
-              {formatMoney(totalUnpaidUpcoming)}
-            </div>
-            <div className="text-xs text-gray-500">
-              {unpaidUpcoming.length} bill(s)
-            </div>
+          <div className="flex gap-2 justify-center items-center">
+            <AssigneeFilter
+              value={assignee}
+              onChange={setAssignee}
+              options={assignees}
+            />
+            <TabSwitcher active={tab} onChange={setTab} />
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-500 cursor-pointer"
+              onClick={handleClick}
+            >
+              <Plus />
+            </Button>
           </div>
-          <div className="rounded-xl border bg-white p-4 shadow-sm">
-            <div className="text-xs uppercase tracking-wide text-gray-500">
-              Overdue
-            </div>
-            <div className="mt-1 text-2xl font-bold">
-              {formatMoney(overdue.reduce((s, b) => s + b.amount, 0))}
-            </div>
-            <div className="text-xs text-gray-500">
-              {overdue.length} bill(s)
-            </div>
-          </div>
-        </div>
-      )}
+        </header>
 
-      {/* Content */}
-      <div className="space-y-8">
-        {tab === "unpaid" ? (
-          <>
-            <Section
-              title="This Month"
-              subtitle="Bills due in the current month."
-              emptyText="No bills due this month."
-              bills={unpaidThisMonthF}
-              onEdit={setEditing}
-            />
-            <Section
-              title="Upcoming"
-              subtitle="Bills due after this month."
-              emptyText="No upcoming bills yet."
-              bills={unpaidUpcomingF}
-              onEdit={setEditing}
-            />
-            {overdue.length > 0 && (
+        {/* Summary cards */}
+        {tab === "unpaid" && (
+          <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border bg-white p-4 shadow-sm">
+              <div className="text-xs uppercase tracking-wide text-gray-500">
+                This Month
+              </div>
+              <div className="mt-1 text-2xl font-bold">
+                {formatMoney(totalUnpaidThisMonth)}
+              </div>
+              <div className="text-xs text-gray-500">
+                {unpaidThisMonth.length} bill(s)
+              </div>
+            </div>
+            <div className="rounded-xl border bg-white p-4 shadow-sm">
+              <div className="text-xs uppercase tracking-wide text-gray-500">
+                Upcoming
+              </div>
+              <div className="mt-1 text-2xl font-bold">
+                {formatMoney(totalUnpaidUpcoming)}
+              </div>
+              <div className="text-xs text-gray-500">
+                {unpaidUpcoming.length} bill(s)
+              </div>
+            </div>
+            <div className="rounded-xl border bg-white p-4 shadow-sm">
+              <div className="text-xs uppercase tracking-wide text-gray-500">
+                Overdue
+              </div>
+              <div className="mt-1 text-2xl font-bold">
+                {formatMoney(overdue.reduce((s, b) => s + b.amount, 0))}
+              </div>
+              <div className="text-xs text-gray-500">
+                {overdue.length} bill(s)
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="space-y-8">
+          {tab === "unpaid" ? (
+            <>
               <Section
-                title="Overdue"
-                subtitle="Past-due bills that need attention."
-                bills={overdueF}
+                title="This Month"
+                subtitle="Bills due in the current month."
+                emptyText="No bills due this month."
+                bills={unpaidThisMonthF}
                 onEdit={setEditing}
               />
-            )}
-          </>
-        ) : (
-          <Section
-            title="Paid"
-            subtitle="Recently paid bills."
-            emptyText="No paid bills yet."
-            bills={paidF}
-            onEdit={setEditing}
+              <Section
+                title="Upcoming"
+                subtitle="Bills due after this month."
+                emptyText="No upcoming bills yet."
+                bills={unpaidUpcomingF}
+                onEdit={setEditing}
+              />
+              {overdue.length > 0 && (
+                <Section
+                  title="Overdue"
+                  subtitle="Past-due bills that need attention."
+                  bills={overdueF}
+                  onEdit={setEditing}
+                />
+              )}
+            </>
+          ) : (
+            <Section
+              title="Paid"
+              subtitle="Recently paid bills."
+              emptyText="No paid bills yet."
+              bills={paidF}
+              onEdit={setEditing}
+            />
+          )}
+        </div>
+
+        {editing && (
+          <BillEditModal
+            bill={editing}
+            open={true}
+            onClose={() => setEditing(null)}
+            assignees={assignees}
           />
         )}
-      </div>
-
-      {editing && (
-        <BillEditModal
-          bill={editing}
-          open={true}
-          onClose={() => setEditing(null)}
-          assignees={assignees}
-        />
-      )}
-    </main>
+      </main>
+    </div>
   );
 }
