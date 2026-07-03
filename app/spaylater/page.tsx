@@ -21,9 +21,7 @@ export default function HomePage() {
 
       const response = await api.get<any>(`${process.env.NEXT_PUBLIC_API_URL}/payees`);
 
-      const json = await response.json();
-
-      setAccounts(Array.isArray(json) ? json : []);
+ setAccounts(Array.isArray(response) ? response : []);
       setLoading(false);
     }
 

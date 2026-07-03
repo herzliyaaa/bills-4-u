@@ -51,20 +51,16 @@ export default function Page() {
         const response = await api.get<any>(
           `${process.env.NEXT_PUBLIC_API_URL}/bills?payeeName=${payee}`,
         );
-        const json = await response.json();
 
-        console.log("BILLS API:", json);
-
-        setBills(Array.isArray(json) ? json : []);
+        setBills(Array.isArray(response) ? response : []);
       } else {
-
         const response = await api.get<any>(
           `${process.env.NEXT_PUBLIC_API_URL}/transactions?payeeName=${payee}&billName=${encodeURIComponent(
             bill,
           )}`,
         );
-        const json = await response.json();
-        setTransactions(json.transactions);
+
+        setTransactions(response.transactions);
         setBills([]);
       }
 
