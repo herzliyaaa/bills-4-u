@@ -160,9 +160,9 @@ function SavingsSection({
         <p className="font-medium">How to use this savings tracker:</p>
         <ol className="list-decimal list-inside mt-1 space-y-1">
           <li>
-            Create a budget named "Savings" with your payroll payback target.
+            Create a budget named `&quot;`Savings`&quot;` with your payroll payback target.
           </li>
-          <li>Log each payroll repayment as a transaction under "Savings".</li>
+          <li>Log each payroll repayment as a transaction under `&quot;`Savings`&quot;`.</li>
           <li>Revisit this page to monitor progress against the target.</li>
           <li>
             Once progress reaches 100%, you’ve completed the goal for the cycle.

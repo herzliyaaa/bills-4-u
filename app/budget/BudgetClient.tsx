@@ -317,20 +317,20 @@ function SavingsSection({
     >
       {savingsTarget === 0 ? (
         <p className="text-gray-500">
-          No savings budget yet. Create a "Savings" budget to track
+          No savings budget yet. Create a `&quot;`Savings`&quot;` budget to track
           payroll-based repayments.
         </p>
       ) : (
         <>
           {/* Progress Card */}
-          <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-6 rounded-lg border border-emerald-200 mb-4">
+          {/* <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-6 rounded-lg border border-emerald-200 mb-4">
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div>
                 <p className="text-xs font-medium text-gray-600 uppercase">
                   Inflow
                 </p>
                 <p className="text-lg font-bold text-green-600">
-                  {formatMoney(savingsInflow)}
+                  {formatMoney(Number(savingsInflow)) }
                 </p>
               </div>
               <div>
@@ -363,10 +363,10 @@ function SavingsSection({
                 ? "🎉 Goal reached! Consider resetting for next cycle."
                 : `${formatMoney(savingsTarget - savingsSaved)} remaining`}
             </p>
-          </div>
+          </div> */}
 
           {/* Add Transaction Form */}
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+          {/* <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
             <h3 className="font-medium text-gray-900 mb-3">
               Add Savings Movement
             </h3>
@@ -435,7 +435,7 @@ function SavingsSection({
                 {isSubmitting ? "Adding..." : "Add Transaction"}
               </button>
             </form>
-          </div>
+          </div> */}
 
           {/* Transactions List */}
           <div className="bg-white p-4 rounded-lg border">
@@ -532,7 +532,7 @@ function SavingsSection({
       <div className="mt-4 text-xs text-gray-500 border-t pt-3">
         <strong>How to use:</strong>
         <ol className="list-decimal list-inside mt-2 space-y-1">
-          <li>Set a "Savings" budget in the Budget Progress section below.</li>
+          <li>Set a `&quot;`Savings`&quot;` budget in the Budget Progress section below.</li>
           <li>
             Use the form above to log inflows (deposits) and outflows
             (withdrawals).

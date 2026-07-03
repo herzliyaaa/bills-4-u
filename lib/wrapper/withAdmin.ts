@@ -12,7 +12,8 @@ export function withAdmin(handler: Handler) {
       const admin = requireAdminApi(req);
 
       return await handler(req, admin);
-    } catch (err) {
+    } catch (error) {
+      console.error("Admin authorization failed:", error);
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }

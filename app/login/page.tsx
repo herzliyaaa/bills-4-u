@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 export default function AdminLogin() {
@@ -57,6 +58,13 @@ export default function AdminLogin() {
           </Button>
           {error && <p className="text-red-500">{error}</p>}
         </form>
+
+        <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+          <p className="mb-3">Need read-only access?</p>
+          <Button asChild variant="outline" className="w-full cursor-pointer">
+            <Link href="/guest">Continue as guest</Link>
+          </Button>
+        </div>
       </div>
     </div>
   );

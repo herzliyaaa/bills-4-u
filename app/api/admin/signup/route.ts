@@ -45,6 +45,7 @@ export async function POST(req: Request) {
       { headers: { "Set-Cookie": cookie } }
     );
   } catch (err) {
+    console.error("Error during admin signup:", err);
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }
