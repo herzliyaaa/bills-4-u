@@ -49,7 +49,7 @@ export default function Page() {
 
       if (!bill) {
         const response = await api.get<any>(
-          `${process.env.API_URL}/bills?payeeName=${payee}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/bills?payeeName=${payee}`,
         );
         const json = await response.json();
 
@@ -59,7 +59,7 @@ export default function Page() {
       } else {
 
         const response = await api.get<any>(
-          `${process.env.API_URL}/transactions?payeeName=${payee}&billName=${encodeURIComponent(
+          `${process.env.NEXT_PUBLIC_API_URL}/transactions?payeeName=${payee}&billName=${encodeURIComponent(
             bill,
           )}`,
         );

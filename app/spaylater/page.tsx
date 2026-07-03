@@ -19,7 +19,7 @@ export default function HomePage() {
     async function load() {
       setLoading(true);
 
-      const response = await api.get<any>(`${process.env.API_URL}/payees`);
+      const response = await api.get<any>(`${process.env.NEXT_PUBLIC_API_URL}/payees`);
 
       const json = await response.json();
 
