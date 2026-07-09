@@ -114,7 +114,6 @@ export default function Page() {
         </div>
 
         {/* BACK BUTTON */}
-        {/* BACK BUTTON */}
         <Link
           href={
             mode === "transactions" ? `/spaylater/transactions/${payee}` : "/"
@@ -246,13 +245,7 @@ export default function Page() {
                       {t.installment ?? "-"}
                     </span>
 
-                    <span
-                      className={`font-semibold ${
-                        t.amount.startsWith("-")
-                          ? "text-red-600"
-                          : "text-green-600"
-                      }`}
-                    >
+                    <span className={`font-semibold ${t.amount}`}>
                       {t.amount}
                     </span>
                   </div>
