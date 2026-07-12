@@ -99,6 +99,15 @@ export const api = {
     request<T>(url, {
       method: "POST",
       body,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }),
+
+  postFile: <T>(url: string, formData: FormData) =>
+    request<T>(url, {
+      method: "POST",
+      body: formData,
     }),
 
   put: <T>(url: string, body?: RequestBody) =>

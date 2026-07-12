@@ -1,24 +1,53 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { api } from "@/lib/api";
 
 export default function Page() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [ocrResponse, setOcrResponse] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleBrowseClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileUpload = async (file: File) => {
+    setLoading(true);
+    setError("");
+    setOcrResponse(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await api.postFile<any>(
+        `${process.env.NEXT_PUBLIC_API_URL}/ocr`,
+        formData,
+      );
+
+      setOcrResponse(response);
+    } catch (err) {
+      console.error(err);
+      setError("An error occurred while uploading the file.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileSelect = async (file: File) => {
+    setSelectedFile(file);
+    await handleFileUpload(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
     if (file) {
-      setSelectedFile(file);
-      console.log(file);
+      handleFileSelect(file);
     }
   };
 
@@ -29,8 +58,7 @@ export default function Page() {
     const file = e.dataTransfer.files?.[0];
 
     if (file) {
-      setSelectedFile(file);
-      console.log(file);
+      handleFileSelect(file);
     }
   };
 
@@ -133,6 +161,10 @@ export default function Page() {
                       {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
+
+                  <pre className="whitespace-pre-wrap text-sm text-gray-700">
+                    {JSON.stringify(ocrResponse, null, 2)}
+                  </pre>
 
                   {/* Replace this section with your OCR/API response later */}
                 </div>
