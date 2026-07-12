@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { api } from "@/lib/api";
 
 export default function Page() {
@@ -9,7 +9,15 @@ export default function Page() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [ocrResponse, setOcrResponse] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [editableText, setEditableText] = useState("");
+
+  useEffect(() => {
+    if (ocrResponse) {
+      setEditableText(JSON.stringify(ocrResponse, null, 2));
+    }
+  }, [ocrResponse]);
 
   const handleBrowseClick = () => {
     fileInputRef.current?.click();
@@ -35,6 +43,25 @@ export default function Page() {
       setError("An error occurred while uploading the file.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveScan = async () => {
+    if (!editableText || saving) return;
+    setSaving(true);
+    setError("");
+
+    try {
+      await api.post<any>(
+        `${process.env.NEXT_PUBLIC_API_URL}/scans/save`,
+        editableText,
+      );
+      alert("Scan saved successfully!");
+    } catch (err) {
+      console.error(err);
+      setError("Error in saving the scan.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -70,6 +97,11 @@ export default function Page() {
           <p className="mt-2 text-gray-600">
             Upload an image or receipt for scanning.
           </p>
+          {error && (
+            <p className="mt-4 rounded-md bg-red-50 p-3 text-sm font-medium text-red-600 border border-red-200">
+              {error}
+            </p>
+          )}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
@@ -90,7 +122,7 @@ export default function Page() {
                   : "border-gray-300 bg-gray-50"
               }`}
             >
-              <div className="text-center">
+              <div className="text-center p-4">
                 <svg
                   className="mx-auto mb-4 h-10 w-10 text-gray-500"
                   fill="none"
@@ -114,9 +146,10 @@ export default function Page() {
                 <button
                   type="button"
                   onClick={handleBrowseClick}
-                  className="mt-4 rounded-md bg-blue-600 px-5 py-2 text-white transition hover:bg-blue-700"
+                  disabled={loading}
+                  className="cursor-pointer mt-4 rounded-md bg-blue-600 px-5 py-2 text-white transition hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  Browse File
+                  {loading ? "Uploading..." : "Browse File"}
                 </button>
 
                 <p className="mt-4 text-xs text-gray-500">
@@ -124,7 +157,7 @@ export default function Page() {
                 </p>
 
                 {selectedFile && (
-                  <p className="mt-4 text-sm font-medium text-green-600">
+                  <p className="mt-4 text-sm font-medium text-green-600 truncate max-w-xs mx-auto">
                     Selected: {selectedFile.name}
                   </p>
                 )}
@@ -144,34 +177,33 @@ export default function Page() {
           <div className="rounded-xl bg-white p-6 shadow">
             <h2 className="mb-4 text-xl font-semibold">Response</h2>
 
-            <div className="flex h-96 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 p-4">
-              {selectedFile ? (
-                <div className="w-full">
-                  <p className="font-semibold">Uploaded File</p>
-
-                  <div className="mt-3 rounded-md bg-white p-4 shadow-sm">
-                    <p>
-                      <strong>Name:</strong> {selectedFile.name}
-                    </p>
-                    <p>
-                      <strong>Type:</strong> {selectedFile.type}
-                    </p>
-                    <p>
-                      <strong>Size:</strong>{" "}
-                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
+            <div className="flex h-96 items-stretch justify-center rounded-lg border border-gray-200 bg-gray-50 p-4">
+              {loading ? (
+                <div className="flex h-full w-full items-center justify-center text-gray-500">
+                  Scanning document... Please wait.
+                </div>
+              ) : selectedFile ? (
+                <div className="w-full h-full overflow-y-auto pb-12 relative flex flex-col justify-between">
+                  <textarea
+                    className="w-full flex-grow rounded-md border border-gray-200 bg-white p-3 font-mono text-sm text-gray-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                    value={editableText}
+                    onChange={(e) => setEditableText(e.target.value)}
+                    placeholder="OCR results will show up here..."
+                  />
+                  <div className="flex w-full items-center justify-end mt-4 shrink-0">
+                    <button
+                      onClick={handleSaveScan}
+                      disabled={saving || !editableText}
+                      className="cursor-pointer rounded-md bg-blue-600 px-5 py-2 text-white transition hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      {saving ? "Saving..." : "Save"}
+                    </button>
                   </div>
-
-                  <pre className="whitespace-pre-wrap text-sm text-gray-700">
-                    {JSON.stringify(ocrResponse, null, 2)}
-                  </pre>
-
-                  {/* Replace this section with your OCR/API response later */}
                 </div>
               ) : (
-                <p className="text-gray-500">
+                <div className="flex h-full w-full items-center justify-center text-gray-500">
                   Upload a file to see the response here.
-                </p>
+                </div>
               )}
             </div>
           </div>
